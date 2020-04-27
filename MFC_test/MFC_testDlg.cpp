@@ -7,6 +7,10 @@
 #include "MFC_test.h"
 #include "MFC_testDlg.h"
 #include "afxdialogex.h"
+#include "stdio.h"
+#include <iostream>
+
+using namespace std;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -53,6 +57,14 @@ END_MESSAGE_MAP()
 CMFCtestDlg::CMFCtestDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_MFC_TEST_DIALOG, pParent)
 {
+	//添加网络配置
+	AfxSocketInit();
+	BOOL b = m_socket.Create(0, SOCK_DGRAM);//绑定自己的端口	
+	if (!b)
+	{
+		cout << GetLastError() << endl;
+	}
+
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
@@ -65,6 +77,8 @@ BEGIN_MESSAGE_MAP(CMFCtestDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDCANCEL,&CMFCtestDlg::OnBnClickedCancel)
+	ON_BN_CLICKED(IDOK, &CMFCtestDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -153,3 +167,15 @@ HCURSOR CMFCtestDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+void CMFCtestDlg::OnBnClickedCancel()
+{
+	//退出函数
+	CDialogEx::OnCancel();
+}
+
+
+void CMFCtestDlg::OnBnClickedOk()
+{
+	// TODO: Add your control notification handler code here
+	CDialogEx::OnOK();
+}
