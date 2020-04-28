@@ -9,10 +9,10 @@
 #define IDR_MAINFRAME                   128
 #define IDC_COMBO_NUMBER                1000
 #define IDC_EDIT_LONGITUDE_1            1001
-#define IDC_COMBO_COLOR                 1002
+#define IDC_COMBO_COLOR1                1002
 #define IDC_COMBO_INFORMATION_SOURCE    1003
 #define IDC_COMBO_TYPE_1                1004
-#define IDC_EDIT_CONFIDENCE             1005
+#define IDC_EDIT_CONFIDENCE1            1005
 #define IDC_EDIT_LATITUDE_1             1006
 #define IDC_EDIT_SPEED_1                1007
 #define IDC_EDIT_X_1                    1008
@@ -35,6 +35,10 @@
 #define IDC_EDIT_COURSE_ANGLE_3         1025
 #define IDC_EDIT_Y_3                    1026
 #define IDC_EDIT_Z_3                    1027
+#define IDC_COMBO_COLOR2                1028
+#define IDC_EDIT_CONFIDENCE2            1029
+#define IDC_COMBO_COLOR3                1030
+#define IDC_EDIT_CONFIDENCE3            1031
 
 // Next default values for new objects
 // 
@@ -42,7 +46,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_CONTROL_VALUE         1032
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

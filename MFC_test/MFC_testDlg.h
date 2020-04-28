@@ -22,6 +22,7 @@ typedef char 				nint8_t;
 
 //高八位和低八位互换宏定义
 #define SW_16(x) ((short)((((short)(x)&(short)0x00ffU)<<8)|(((short)(x)&(short)0xff00U)>>8)))
+#define SW_32(x)  ((x)&(0x00ffU)<<24)|((x)&(0xff00U)<<16)|((x>>16)&(0x00ffU)<<8)|((x>>16)&(0xff00U))
 
 class CMFCtestDlg : public CDialogEx
 {
@@ -90,6 +91,8 @@ public:
 	enum { IDD = IDD_MFC_TEST_DIALOG };
 #endif
 
+	static UINT SendDataThread(LPVOID pParam);
+
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
@@ -105,10 +108,43 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 
 	//添加发送数据函数
-	afx_msg LRESULT OnSendData(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnSendData();
 
 	DECLARE_MESSAGE_MAP()
 public:
+	CComboBox m_CmbNumber;
+	CComboBox m_CmbInfoSource;
+	CComboBox m_CmbType1;
+	CComboBox m_CmbType2;
+	CComboBox m_CmbType3;
+	CComboBox m_CmbColor1;
+	CComboBox m_CmbColor2;
+	CComboBox m_CmbColor3;
+	uint8_t   m_TextConfidence1;
+	nint32_t  m_TextLongitude1;
+	nint32_t  m_TextLatitude1;
+	uint32_t  m_TextSpeed1;
+	uint32_t  m_TextCourseAngle1;
+	nint32_t  m_TextPositionX1;
+	nint32_t  m_TextPositionY1;
+	nint32_t  m_TextPositionZ1;
+	uint8_t   m_TextConfidence2;
+	nint32_t  m_TextLongitude2;
+	nint32_t  m_TextLatitude2;
+	uint32_t  m_TextSpeed2;
+	uint32_t  m_TextCourseAngle2;
+	nint32_t  m_TextPositionX2;
+	nint32_t  m_TextPositionY2;
+	nint32_t  m_TextPositionZ2;
+	uint8_t   m_TextConfidence3;
+	nint32_t  m_TextLongitude3;
+	nint32_t  m_TextLatitude3;
+	uint32_t  m_TextSpeed3;
+	uint32_t  m_TextCourseAngle3;
+	nint32_t  m_TextPositionX3;
+	nint32_t  m_TextPositionY3;
+	nint32_t  m_TextPositionZ3;
+
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedOk();
 };
