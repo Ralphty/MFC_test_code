@@ -104,6 +104,9 @@ BEGIN_MESSAGE_MAP(CMFCtestDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+
+	ON_MESSAGE(WM_NET_SENDSignalINFO, &CMFCtestDlg::OnSendData)
+
 	ON_BN_CLICKED(IDCANCEL,&CMFCtestDlg::OnBnClickedCancel)
 	ON_BN_CLICKED(IDOK, &CMFCtestDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
@@ -269,19 +272,23 @@ void CMFCtestDlg::OnPaint()
 UINT CMFCtestDlg::SendDataThread(LPVOID pParam)
 {
 	CMFCtestDlg *pDlg = (CMFCtestDlg *)pParam;
-	while (true)
-	{
-		pDlg->OnSendData();
-	}
+	pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
+
+	return 0;
 }
 
+
 //UDP·¢ËÍº¯Êý
-LRESULT CMFCtestDlg::OnSendData()
+LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 {
 	UpdateData(TRUE);
+	g_UdpSendRSM.m_MessageContent.m_ParticipantInformation = &g_ParticipantInformation;
 	//int length = sizeof(g_UdpSendRSM);
 	char StatusBuf[100];
+	
 	g_IndexNumber = m_CmbNumber.GetCurSel();
+	
+#if 1
 	if (g_IndexNumber == 0)
 	{
 		g_UdpSendRSM.StartBit = 0xFFFF;
@@ -331,7 +338,9 @@ LRESULT CMFCtestDlg::OnSendData()
 		g_UdpSendRSM.EndBit = 0xFF;
 		UpdateData(false);
 
-		memcpy(&StatusBuf, &g_UdpSendRSM.StartBit, 2);
+
+
+		memcpy(&StatusBuf[0], &g_UdpSendRSM.StartBit, 2);
 		memcpy(&StatusBuf[2], &g_UdpSendRSM.SerialNumber, 1);
 		memcpy(&StatusBuf[3], &g_UdpSendRSM.MasterNumber, 1);
 		memcpy(&StatusBuf[4], &g_UdpSendRSM.SlaveNumber, 1);
@@ -368,7 +377,6 @@ LRESULT CMFCtestDlg::OnSendData()
 		memcpy(&StatusBuf[80], &g_UdpSendRSM.ParityBit, 1);
 		memcpy(&StatusBuf[81], &g_UdpSendRSM.EndBit, 1);
 
-		m_socket.SendTo((void *)StatusBuf, 82, 8888, _T("127.0.0.1"));
 	}
 	else if (g_IndexNumber == 1)
 	{
@@ -388,7 +396,8 @@ LRESULT CMFCtestDlg::OnSendData()
 		g_UdpSendRSM.StatusBit = 0;
 		//g_UdpSendRSM.MessageLength =
 	}
-
+#endif
+	m_socket.SendTo((void *)StatusBuf, 82, 8888, _T("127.0.0.1"));
 	return 0;
 }
 
@@ -411,4 +420,12 @@ void CMFCtestDlg::OnBnClickedOk()
 	// TODO: Add your control notification handler code here
 	//CDialogEx::OnOK();
 	CWinThread *pthread_Senddata1 = AfxBeginThread(SendDataThread, this);
+#if 0
+	CMFCtestDlg *pDlg = new CMFCtestDlg;
+	while (true)
+	{
+		pDlg->OnSendData();
+		Sleep(100);
+	}
+#endif
 }

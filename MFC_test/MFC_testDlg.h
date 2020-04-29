@@ -16,9 +16,7 @@ typedef short 				nint16_t;
 typedef char 				nint8_t;
 
 //定义用户使用ID
-//#define  WM_NET_SENDSignalINFO (WM_USER + 101)
-//#define	 WM_NET_Linsten (WM_USER + 102)
-//#define  WM_NET_CHECK (WM_USER + 103)
+#define  WM_NET_SENDSignalINFO (WM_USER + 101)
 
 //高八位和低八位互换宏定义
 #define SW_16(x) ((short)((((short)(x)&(short)0x00ffU)<<8)|(((short)(x)&(short)0xff00U)>>8)))
@@ -85,6 +83,7 @@ public:
 	}UdpSendRSM;
 
 	UdpSendRSM g_UdpSendRSM;
+	PARTICIPANTINFORMATION g_ParticipantInformation;
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -108,7 +107,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 
 	//添加发送数据函数
-	afx_msg LRESULT OnSendData();
+	LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 public:
