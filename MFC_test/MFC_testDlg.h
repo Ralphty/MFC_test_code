@@ -20,7 +20,7 @@ typedef char 				nint8_t;
 
 //高八位和低八位互换宏定义
 #define SW_16(x) ((short)((((short)(x)&(short)0x00ffU)<<8)|(((short)(x)&(short)0xff00U)>>8)))
-#define SW_32(x)  ((x)&(0x00ffU)<<24)|((x)&(0xff00U)<<16)|((x>>16)&(0x00ffU)<<8)|((x>>16)&(0xff00U))
+#define SW_32(x)  ((((x)&(0x00ffU))<<24)|(((x)&(0xff00U))<<8)|(((x>>16)&(0x00ffU))<<8)|(((x>>16)&(0xff00U))>>8))
 
 class CMFCtestDlg : public CDialogEx
 {

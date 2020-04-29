@@ -272,7 +272,12 @@ void CMFCtestDlg::OnPaint()
 UINT CMFCtestDlg::SendDataThread(LPVOID pParam)
 {
 	CMFCtestDlg *pDlg = (CMFCtestDlg *)pParam;
-	pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
+	while (true)
+	{
+		pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
+		Sleep(2000);
+	}
+	//pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
 
 	return 0;
 }
@@ -283,7 +288,6 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 {
 	UpdateData(TRUE);
 	g_UdpSendRSM.m_MessageContent.m_ParticipantInformation = &g_ParticipantInformation;
-	//int length = sizeof(g_UdpSendRSM);
 	char StatusBuf[100];
 	
 	g_IndexNumber = m_CmbNumber.GetCurSel();
@@ -411,6 +415,7 @@ HCURSOR CMFCtestDlg::OnQueryDragIcon()
 void CMFCtestDlg::OnBnClickedCancel()
 {
 	//ÍË³öº¯Êý
+	m_socket.Close();
 	CDialogEx::OnCancel();
 }
 
@@ -420,12 +425,4 @@ void CMFCtestDlg::OnBnClickedOk()
 	// TODO: Add your control notification handler code here
 	//CDialogEx::OnOK();
 	CWinThread *pthread_Senddata1 = AfxBeginThread(SendDataThread, this);
-#if 0
-	CMFCtestDlg *pDlg = new CMFCtestDlg;
-	while (true)
-	{
-		pDlg->OnSendData();
-		Sleep(100);
-	}
-#endif
 }
