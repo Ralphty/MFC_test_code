@@ -401,7 +401,7 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		//g_UdpSendRSM.MessageLength =
 	}
 #endif
-	m_socket.SendTo((void *)StatusBuf, 82, 8888, _T("127.0.0.1"));
+	m_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.123.1"));
 	return 0;
 }
 
