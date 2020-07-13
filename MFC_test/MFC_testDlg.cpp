@@ -98,6 +98,9 @@ void CMFCtestDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_X_3, m_TextPositionX3);
 	DDX_Text(pDX, IDC_EDIT_Y_3, m_TextPositionY3);
 	DDX_Text(pDX, IDC_EDIT_Z_3, m_TextPositionZ3);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LATITUDE, m_TextLidarLongitude);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LONGITUDE, m_TextLidarLatitude);
+
 }
 
 BEGIN_MESSAGE_MAP(CMFCtestDlg, CDialogEx)
@@ -305,8 +308,8 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		g_UdpSendRSM.m_MessageContent.Reserved1 = 0;
 		g_UdpSendRSM.m_MessageContent.DataFrameNumber = 0;
 		g_UdpSendRSM.m_MessageContent.TimeStamp = 0;
-		g_UdpSendRSM.m_MessageContent.LidarLongitude = SW_32(0x43A6D392);
-		g_UdpSendRSM.m_MessageContent.LidarLatitude = SW_32(0x0DBAE80E);
+		g_UdpSendRSM.m_MessageContent.LidarLongitude = SW_32(m_TextLidarLongitude);
+		g_UdpSendRSM.m_MessageContent.LidarLatitude = SW_32(m_TextLidarLatitude);
 		g_UdpSendRSM.m_MessageContent.LidarAngle = SW_16(0x0048);
 		g_UdpSendRSM.m_MessageContent.TrafficParticipantNumber = 0x01;
 		g_UdpSendRSM.m_MessageContent.Reserved2[0] = 0;
@@ -401,7 +404,7 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		//g_UdpSendRSM.MessageLength =
 	}
 #endif
-	m_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.123.1"));
+	m_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.20.199"));
 	return 0;
 }
 

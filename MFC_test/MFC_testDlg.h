@@ -143,6 +143,8 @@ public:
 	nint32_t  m_TextPositionX3;
 	nint32_t  m_TextPositionY3;
 	nint32_t  m_TextPositionZ3;
+	uint32_t  m_TextLidarLongitude;
+	uint32_t  m_TextLidarLatitude;
 
 	afx_msg void OnBnClickedCancel();
 	afx_msg void OnBnClickedOk();
