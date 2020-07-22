@@ -317,7 +317,7 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		g_UdpSendRSM.m_MessageContent.Reserved2[2] = 0;
 		g_UdpSendRSM.m_MessageContent.Reserved2[3] = 0;
 		g_UdpSendRSM.m_MessageContent.Reserved2[4] = 0;
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantID = 0;
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantID = SW_16(0x0001);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantType = m_CmbType1.GetCurSel();
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantConfidence = m_TextConfidence1;
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantColor = m_CmbColor1.GetCurSel();
