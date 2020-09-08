@@ -18,6 +18,9 @@ using namespace std;
 #endif
 
 int g_IndexNumber = 0;
+nint32_t m_dwPos;
+nint32_t dynamic_Longitude[20];
+nint32_t dynamic_Latitude[20];
 
 
 // CAboutDlg dialog used for App About
@@ -225,6 +228,35 @@ BOOL CMFCtestDlg::OnInitDialog()
 		cout << GetLastError() << endl;
 	}
 
+	CString strline; 
+	char* buf;
+	CStdioFile file;
+	CString str_Longitude;
+	CString str_Latitude;
+	double d_Longitude;
+	double d_Latitude;
+	BOOL flie_Flag = file.Open(_T("C:\\file\\test.inf"), CFile::modeRead);
+	if (flie_Flag == FALSE)
+	{
+		AfxMessageBox(_T("文件打开失败！"));
+	}
+	//file.Seek(m_dwPos,CFile::begin);
+	static int ol = 0;
+	while(file.ReadString(strline))
+	{
+			//m_dwPos = file.GetPosition();          //记录上次的结果（读到哪了）
+			//str_Longitude = strtok_s((LPSTR)(LPCTSTR)strline.GetBuffer(0), ",", &buf);
+			//str_Longitude = strtok_s((LPSTR)(LPCTSTR)strline, " ", &buf);
+			//str_Latitude = strtok_s(NULL, " ", &buf);
+			AfxExtractSubString(str_Longitude,(LPCTSTR)strline, 0, ' ');
+			AfxExtractSubString(str_Latitude, (LPCTSTR)strline, 1, ' ');
+			d_Longitude = _tstof(str_Longitude);
+			d_Latitude = _tstof(str_Latitude);
+			dynamic_Longitude[ol] = d_Longitude*10000000;
+			dynamic_Latitude[ol] = d_Latitude*10000000;
+			ol++;
+	}
+	file.Close();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -287,6 +319,7 @@ UINT CMFCtestDlg::SendDataThread(LPVOID pParam)
 
 
 //UDP发送函数
+int count_flag = 0;
 LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 {
 	UpdateData(TRUE);
@@ -324,8 +357,17 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantInformationSource = m_CmbInfoSource.GetCurSel();
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantReserved1[0] = 0;
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantReserved1[1] = 0;
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(m_TextLongitude1);
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(m_TextLatitude1);
+
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(dynamic_Longitude[count_flag]);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(dynamic_Latitude[count_flag]);
+		count_flag++;
+		if (count_flag == 20)
+		{
+			count_flag = 0;
+		}
+
+		//g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(m_TextLongitude1);
+		//g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(m_TextLatitude1);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantAltitude = SW_16(0x10F4);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantSpeed = SW_16(m_TextSpeed1);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantCourseAngle = SW_16(m_TextCourseAngle1);
