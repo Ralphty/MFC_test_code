@@ -10,6 +10,8 @@
 #include "stdio.h"
 #include <iostream>
 #include "afxwin.h"
+#include "NComRxC.h"
+#include <cmath>
 
 using namespace std;
 
@@ -17,9 +19,22 @@ using namespace std;
 #define new DEBUG_NEW
 #endif
 
+double Tmp_Latitude = 0.0;
+double Tmp_Longitude = 0.0;
+float  Tmp_Altitude = 0.0;
+double Tmp_Vn = 0.0;
+double Tmp_Ve = 0.0;
+double Tmp_V = 0.0;
+double Tmp_Heading = 0.0;
+
+int32_t longitude_v = 0;
+int32_t latitude_v = 0;
+
 int g_IndexNumber = 0;
 
-
+CSocket Rsu_socket;       //定义网络传输套接字(上位机到RSU)
+CSocket Rt_socket;        //定义网络传输套接字（RT到上位机)
+SOCKADDR_IN ClientAddr;
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -219,12 +234,21 @@ BOOL CMFCtestDlg::OnInitDialog()
 
 	//添加网络配置
 	AfxSocketInit();
-	BOOL b = m_socket.Create(0, SOCK_DGRAM);//绑定自己的端口	
+	BOOL b = Rsu_socket.Create(0, SOCK_DGRAM);//绑定自己的端口	
 	if (!b)
 	{
 		cout << GetLastError() << endl;
 	}
 
+	BOOL c = Rt_socket.Create(3000, SOCK_DGRAM);
+	if (!c)
+	{
+		cout << GetLastError() << endl;
+	}
+
+	Rt_socket.Bind(3000,_T("127.0.0.1"));
+	CWinThread *pthread_Senddata2;
+	pthread_Senddata2  = ::AfxBeginThread(ReceiveDataThread, this);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -324,11 +348,13 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantInformationSource = m_CmbInfoSource.GetCurSel();
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantReserved1[0] = 0;
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantReserved1[1] = 0;
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(m_TextLongitude1);
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(m_TextLatitude1);
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantAltitude = SW_16(0x10F4);
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantSpeed = SW_16(m_TextSpeed1);
-		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantCourseAngle = SW_16(m_TextCourseAngle1);
+		//g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(m_TextLongitude1);
+		//g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(m_TextLatitude1);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLongitude = SW_32(longitude_v);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLatitude = SW_32(latitude_v);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantAltitude = SW_16(Tmp_Altitude);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantSpeed = SW_16(Tmp_V);
+		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantCourseAngle = SW_16(Tmp_Heading);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantLength = SW_16(0x001E);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantWidth = SW_16(0x001E);
 		g_UdpSendRSM.m_MessageContent.m_ParticipantInformation->ParticipantHeight = SW_16(0x0084);
@@ -404,7 +430,52 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		//g_UdpSendRSM.MessageLength =
 	}
 #endif
-	m_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.20.199"));
+	Rsu_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.20.199"));
+	return 0;
+}
+
+UINT ReceiveDataThread(LPVOID pParam)
+{
+	while (true)
+	{
+		unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
+		NComRxC *strut_com;
+		int nReturn = 0;
+		CString szIP = _T("127.0.0.1");
+		UINT nPort = 3000;
+		int len = sizeof(SOCKADDR_IN);
+		int i = 0;
+		strut_com = NComCreateNComRxC();
+		if (strut_com == NULL)
+		{
+			//AfxMessageBox("Error: Unable to create NCom decoder!");
+			return -1;
+		}
+		//Rt_socket.ReceiveFrom(pcNCOMbuf,sizeof(pcNCOMbuf),(SOCKADDR*)&ClientAddr,&len,0);
+		Rt_socket.ReceiveFrom(pcNCOMbuf, sizeof(pcNCOMbuf),szIP, nPort, 0);
+		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
+		if (pcNCOMbuf[i] == 0xE7)
+		{
+			for (i = 0; i < 72; i++)
+			{
+				NComNewChar(strut_com, pcNCOMbuf[i]);
+			}
+			Tmp_Latitude = strut_com->mLat;
+			Tmp_Longitude = strut_com->mLon;
+			latitude_v = (int32_t)(Tmp_Latitude * 10000000);
+			longitude_v = (int32_t)(Tmp_Longitude * 10000000);
+			Tmp_Altitude = (int16_t)((strut_com->mAlt)*100);
+			Tmp_Vn = strut_com->mVn;
+			Tmp_Ve = strut_com->mVe;
+			Tmp_Heading = (int16_t)(strut_com->mHeading);
+			Tmp_V = sqrt((strut_com->mVn*strut_com->mVn)+(strut_com->mVe)*(strut_com->mVe));
+			Tmp_V = (int16_t)(Tmp_V * 100);
+		}
+
+
+		//Sleep(1000);
+	}
+
 	return 0;
 }
 
@@ -418,7 +489,8 @@ HCURSOR CMFCtestDlg::OnQueryDragIcon()
 void CMFCtestDlg::OnBnClickedCancel()
 {
 	//退出函数
-	m_socket.Close();
+	Rsu_socket.Close();
+	Rt_socket.Close();
 	CDialogEx::OnCancel();
 }
 
@@ -428,4 +500,5 @@ void CMFCtestDlg::OnBnClickedOk()
 	// TODO: Add your control notification handler code here
 	//CDialogEx::OnOK();
 	CWinThread *pthread_Senddata1 = AfxBeginThread(SendDataThread, this);
+
 }
