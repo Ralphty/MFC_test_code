@@ -78,6 +78,11 @@ CMFCtestDlg::CMFCtestDlg(CWnd* pParent /*=nullptr*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
+CMFCtestDlg::~CMFCtestDlg()
+{
+	
+}
+
 void CMFCtestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
@@ -234,21 +239,22 @@ BOOL CMFCtestDlg::OnInitDialog()
 
 	//添加网络配置
 	AfxSocketInit();
-	BOOL b = Rsu_socket.Create(0, SOCK_DGRAM);//绑定自己的端口	
+	BOOL b = Rsu_socket.Create(0, SOCK_DGRAM);//绑定端口(和RSU通信)	
 	if (!b)
 	{
 		cout << GetLastError() << endl;
 	}
 
-	BOOL c = Rt_socket.Create(3000, SOCK_DGRAM);
+	/*
+	AfxSocketInit();
+	BOOL c = Rt_socket.Create(3000, SOCK_DGRAM);//绑定端口（和RT通信）
 	if (!c)
 	{
 		cout << GetLastError() << endl;
 	}
+	*/
 
-	Rt_socket.Bind(3000,_T("127.0.0.1"));
-	CWinThread *pthread_Senddata2;
-	pthread_Senddata2  = ::AfxBeginThread(ReceiveDataThread, this);
+	CWinThread *pthread_Senddata2 = AfxBeginThread(ReceiveDataThread, this);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -436,26 +442,34 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 
 UINT ReceiveDataThread(LPVOID pParam)
 {
+	AfxSocketInit();
+	BOOL c = Rt_socket.Create(3000, SOCK_DGRAM);//绑定端口（和RT通信）
+	if (!c)
+	{
+		cout << GetLastError() << endl;
+	}
+	unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
+	//unsigned char pcNCOMbuf[72] = { 0 };
+	NComRxC *strut_com;
+	int nReturn = 0;
+	CString szIP = _T("192.168.20.123");
+	UINT nPort = 3000;
+	int len = sizeof(SOCKADDR_IN);
+	int i = 0;
+	strut_com = NComCreateNComRxC();
+	if (strut_com == NULL)
+	{
+		//AfxMessageBox("Error: Unable to create NCom decoder!");
+		return -1;
+	}
 	while (true)
 	{
-		unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
-		NComRxC *strut_com;
-		int nReturn = 0;
-		CString szIP = _T("127.0.0.1");
-		UINT nPort = 3000;
-		int len = sizeof(SOCKADDR_IN);
-		int i = 0;
-		strut_com = NComCreateNComRxC();
-		if (strut_com == NULL)
-		{
-			//AfxMessageBox("Error: Unable to create NCom decoder!");
-			return -1;
-		}
 		//Rt_socket.ReceiveFrom(pcNCOMbuf,sizeof(pcNCOMbuf),(SOCKADDR*)&ClientAddr,&len,0);
-		Rt_socket.ReceiveFrom(pcNCOMbuf, sizeof(pcNCOMbuf),szIP, nPort, 0);
+		//Sleep(5000);
+		Rt_socket.ReceiveFrom(pcNCOMbuf, 72, szIP, nPort, 0);
 		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
-		if (pcNCOMbuf[i] == 0xE7)
-		{
+		//if (pcNCOMbuf[i] == 0xE7)
+		//{
 			for (i = 0; i < 72; i++)
 			{
 				NComNewChar(strut_com, pcNCOMbuf[i]);
@@ -470,11 +484,9 @@ UINT ReceiveDataThread(LPVOID pParam)
 			Tmp_Heading = (int16_t)(strut_com->mHeading);
 			Tmp_V = sqrt((strut_com->mVn*strut_com->mVn)+(strut_com->mVe)*(strut_com->mVe));
 			Tmp_V = (int16_t)(Tmp_V * 100);
-		}
-
-
-		//Sleep(1000);
+		//}
 	}
+	free(pcNCOMbuf);
 
 	return 0;
 }
@@ -500,5 +512,6 @@ void CMFCtestDlg::OnBnClickedOk()
 	// TODO: Add your control notification handler code here
 	//CDialogEx::OnOK();
 	CWinThread *pthread_Senddata1 = AfxBeginThread(SendDataThread, this);
+	//CWinThread *pthread_Senddata2 = AfxBeginThread(ReceiveDataThread, this);
 
 }

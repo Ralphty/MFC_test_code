@@ -34,6 +34,8 @@ class CMFCtestDlg : public CDialogEx
 public:
 	CMFCtestDlg(CWnd* pParent = nullptr);	// standard constructor
 
+	virtual ~CMFCtestDlg();
+
 	typedef struct _PARTICIPANTINFORMATION
 	{
 		uint16_t  ParticipantID;
