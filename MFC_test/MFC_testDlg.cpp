@@ -98,8 +98,8 @@ void CMFCtestDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_X_3, m_TextPositionX3);
 	DDX_Text(pDX, IDC_EDIT_Y_3, m_TextPositionY3);
 	DDX_Text(pDX, IDC_EDIT_Z_3, m_TextPositionZ3);
-	DDX_Text(pDX, IDC_EDIT_LIDAR_LATITUDE, m_TextLidarLongitude);
-	DDX_Text(pDX, IDC_EDIT_LIDAR_LONGITUDE, m_TextLidarLatitude);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LONGITUDE, m_TextLidarLongitude);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LATITUDE, m_TextLidarLatitude);
 
 }
 
@@ -404,7 +404,7 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		//g_UdpSendRSM.MessageLength =
 	}
 #endif
-	m_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.20.199"));
+	m_socket.SendTo((void *)StatusBuf, 82, 6000, _T("192.168.20.110"));
 	return 0;
 }
 
