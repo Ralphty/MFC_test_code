@@ -118,8 +118,8 @@ void CMFCtestDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_X_3, m_TextPositionX3);
 	DDX_Text(pDX, IDC_EDIT_Y_3, m_TextPositionY3);
 	DDX_Text(pDX, IDC_EDIT_Z_3, m_TextPositionZ3);
-	DDX_Text(pDX, IDC_EDIT_LIDAR_LATITUDE, m_TextLidarLongitude);
-	DDX_Text(pDX, IDC_EDIT_LIDAR_LONGITUDE, m_TextLidarLatitude);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LONGITUDE, m_TextLidarLongitude);
+	DDX_Text(pDX, IDC_EDIT_LIDAR_LATITUDE, m_TextLidarLatitude);
 
 }
 
@@ -308,7 +308,7 @@ UINT CMFCtestDlg::SendDataThread(LPVOID pParam)
 	while (true)
 	{
 		pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
-		Sleep(2000);
+		Sleep(1000);
 	}
 	//pDlg->PostMessage(WM_NET_SENDSignalINFO, 0);
 
@@ -436,24 +436,25 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 		//g_UdpSendRSM.MessageLength =
 	}
 #endif
-	Rsu_socket.SendTo((void *)StatusBuf, 82, 5001, _T("192.168.20.199"));
+	Rsu_socket.SendTo((void *)StatusBuf, 82, 6000, _T("192.168.20.110"));
 	return 0;
 }
 
 UINT ReceiveDataThread(LPVOID pParam)
 {
 	AfxSocketInit();
-	BOOL c = Rt_socket.Create(3000, SOCK_DGRAM);//绑定端口（和RT通信）
+	BOOL c = Rt_socket.Create(8000, SOCK_DGRAM);//绑定端口（和RT通信）
 	if (!c)
 	{
 		cout << GetLastError() << endl;
 	}
+	unsigned char pcBuf[100] = {0};
 	unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
 	//unsigned char pcNCOMbuf[72] = { 0 };
 	NComRxC *strut_com;
 	int nReturn = 0;
-	CString szIP = _T("192.168.20.123");
-	UINT nPort = 3000;
+	CString szIP = _T("192.168.20.100");
+	UINT nPort = 3003;
 	int len = sizeof(SOCKADDR_IN);
 	int i = 0;
 	strut_com = NComCreateNComRxC();
@@ -466,10 +467,11 @@ UINT ReceiveDataThread(LPVOID pParam)
 	{
 		//Rt_socket.ReceiveFrom(pcNCOMbuf,sizeof(pcNCOMbuf),(SOCKADDR*)&ClientAddr,&len,0);
 		//Sleep(5000);
-		Rt_socket.ReceiveFrom(pcNCOMbuf, 72, szIP, nPort, 0);
+		Rt_socket.ReceiveFrom(pcBuf, 82, szIP, nPort, 0);
 		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
-		//if (pcNCOMbuf[i] == 0xE7)
-		//{
+		if (pcBuf[0] == 0x57 && pcBuf[1] == 0x03 && pcBuf[7] == 0x15)
+		{
+			memcpy(pcNCOMbuf, &pcBuf[9], 72);
 			for (i = 0; i < 72; i++)
 			{
 				NComNewChar(strut_com, pcNCOMbuf[i]);
@@ -484,7 +486,7 @@ UINT ReceiveDataThread(LPVOID pParam)
 			Tmp_Heading = (int16_t)(strut_com->mHeading);
 			Tmp_V = sqrt((strut_com->mVn*strut_com->mVn)+(strut_com->mVe)*(strut_com->mVe));
 			Tmp_V = (int16_t)(Tmp_V * 100);
-		//}
+		}
 	}
 	free(pcNCOMbuf);
 
