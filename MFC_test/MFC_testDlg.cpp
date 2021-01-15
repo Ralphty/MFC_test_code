@@ -443,10 +443,11 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 UINT ReceiveDataThread(LPVOID pParam)
 {
 	AfxSocketInit();
-	BOOL c = Rt_socket.Create(8000, SOCK_DGRAM);//绑定端口（和RT通信）
+	BOOL c = Rt_socket.Create(3003, SOCK_DGRAM, _T("192.168.20.150"));//绑定端口（和RT通信）
 	if (!c)
 	{
 		cout << GetLastError() << endl;
+		AfxMessageBox(_T("Error: bind fail !"));
 	}
 	unsigned char pcBuf[100] = {0};
 	unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
@@ -454,7 +455,7 @@ UINT ReceiveDataThread(LPVOID pParam)
 	NComRxC *strut_com;
 	int nReturn = 0;
 	CString szIP = _T("192.168.20.100");
-	UINT nPort = 3003;
+	UINT nPort = 49154;
 	int len = sizeof(SOCKADDR_IN);
 	int i = 0;
 	strut_com = NComCreateNComRxC();
@@ -469,7 +470,7 @@ UINT ReceiveDataThread(LPVOID pParam)
 		//Sleep(5000);
 		Rt_socket.ReceiveFrom(pcBuf, 82, szIP, nPort, 0);
 		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
-		if (pcBuf[0] == 0x57 && pcBuf[1] == 0x03 && pcBuf[7] == 0x15)
+		if (pcBuf[0] == 0x57 && pcBuf[1] == 0x03 && pcBuf[4] == 0xC0 && pcBuf[5] == 0xA8 && pcBuf[6] == 0x14 && pcBuf[7] == 0x0C)
 		{
 			memcpy(pcNCOMbuf, &pcBuf[9], 72);
 			for (i = 0; i < 72; i++)
@@ -489,6 +490,7 @@ UINT ReceiveDataThread(LPVOID pParam)
 		}
 	}
 	free(pcNCOMbuf);
+	//NComDestroyNComRxC(strut_com);
 
 	return 0;
 }
