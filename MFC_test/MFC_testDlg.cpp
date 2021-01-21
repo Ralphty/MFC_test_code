@@ -448,6 +448,7 @@ UINT ReceiveDataThread(LPVOID pParam)
 	{
 		cout << GetLastError() << endl;
 		AfxMessageBox(_T("Error: bind fail !"));
+		return -1;
 	}
 	unsigned char pcBuf[100] = {0};
 	unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
@@ -458,6 +459,8 @@ UINT ReceiveDataThread(LPVOID pParam)
 	UINT nPort = 49154;
 	int len = sizeof(SOCKADDR_IN);
 	int i = 0;
+	//int countRev = 0;
+	CString strCount;
 	strut_com = NComCreateNComRxC();
 	if (strut_com == NULL)
 	{
@@ -469,9 +472,20 @@ UINT ReceiveDataThread(LPVOID pParam)
 		//Rt_socket.ReceiveFrom(pcNCOMbuf,sizeof(pcNCOMbuf),(SOCKADDR*)&ClientAddr,&len,0);
 		//Sleep(5000);
 		Rt_socket.ReceiveFrom(pcBuf, 82, szIP, nPort, 0);
+		/*
+		countRev++;
+		if (countRev > 1000)
+		{
+			strCount.Format(_T("receive count is %d,%d"), pcBuf[0], pcBuf[0]);
+			AfxMessageBox(strCount);
+			countRev = 0;
+		}
+		*/
 		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
 		if (pcBuf[0] == 0x57 && pcBuf[1] == 0x03 && pcBuf[4] == 0xC0 && pcBuf[5] == 0xA8 && pcBuf[6] == 0x14 && pcBuf[7] == 0x0C)
 		{
+			//strCount.Format(_T("receive count is %x,%x"), pcBuf[0], pcBuf[1]);
+			//AfxMessageBox(strCount);
 			memcpy(pcNCOMbuf, &pcBuf[9], 72);
 			for (i = 0; i < 72; i++)
 			{
