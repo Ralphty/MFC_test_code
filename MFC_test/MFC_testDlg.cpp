@@ -12,6 +12,7 @@
 #include "afxwin.h"
 #include "NComRxC.h"
 #include <cmath>
+#include "SerialUtils.h"
 
 using namespace std;
 
@@ -22,8 +23,6 @@ using namespace std;
 double Tmp_Latitude = 0.0;
 double Tmp_Longitude = 0.0;
 float  Tmp_Altitude = 0.0;
-double Tmp_Vn = 0.0;
-double Tmp_Ve = 0.0;
 double Tmp_V = 0.0;
 double Tmp_Heading = 0.0;
 
@@ -33,8 +32,8 @@ int32_t latitude_v = 0;
 int g_IndexNumber = 0;
 
 CSocket Rsu_socket;       //定义网络传输套接字(上位机到RSU)
-CSocket Rt_socket;        //定义网络传输套接字（RT到上位机)
-SOCKADDR_IN ClientAddr;
+
+void OnRecvCommSend(LPVOID lpParam, BYTE *pDataBuf, int nDataBufSize);
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -254,7 +253,7 @@ BOOL CMFCtestDlg::OnInitDialog()
 	}
 	*/
 
-	CWinThread *pthread_Senddata2 = AfxBeginThread(ReceiveDataThread, this);
+	//CWinThread *pthread_Senddata2 = AfxBeginThread(ReceiveDataThread, this);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -440,74 +439,12 @@ LRESULT CMFCtestDlg::OnSendData(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+/*
 UINT ReceiveDataThread(LPVOID pParam)
 {
-	AfxSocketInit();
-	BOOL c = Rt_socket.Create(3003, SOCK_DGRAM, _T("192.168.20.150"));//绑定端口（和RT通信）
-	if (!c)
-	{
-		cout << GetLastError() << endl;
-		AfxMessageBox(_T("Error: bind fail !"));
-		return -1;
-	}
-	unsigned char pcBuf[100] = {0};
-	unsigned char *pcNCOMbuf = (unsigned char*)malloc(72);
-	//unsigned char pcNCOMbuf[72] = { 0 };
-	NComRxC *strut_com;
-	int nReturn = 0;
-	CString szIP = _T("192.168.20.100");
-	UINT nPort = 49154;
-	int len = sizeof(SOCKADDR_IN);
-	int i = 0;
-	//int countRev = 0;
-	CString strCount;
-	strut_com = NComCreateNComRxC();
-	if (strut_com == NULL)
-	{
-		//AfxMessageBox("Error: Unable to create NCom decoder!");
-		return -1;
-	}
-	while (true)
-	{
-		//Rt_socket.ReceiveFrom(pcNCOMbuf,sizeof(pcNCOMbuf),(SOCKADDR*)&ClientAddr,&len,0);
-		//Sleep(5000);
-		Rt_socket.ReceiveFrom(pcBuf, 82, szIP, nPort, 0);
-		/*
-		countRev++;
-		if (countRev > 1000)
-		{
-			strCount.Format(_T("receive count is %d,%d"), pcBuf[0], pcBuf[0]);
-			AfxMessageBox(strCount);
-			countRev = 0;
-		}
-		*/
-		//Rt_socket.Receive(pcNCOMbuf, sizeof(pcNCOMbuf));
-		if (pcBuf[0] == 0x57 && pcBuf[1] == 0x03 && pcBuf[4] == 0xC0 && pcBuf[5] == 0xA8 && pcBuf[6] == 0x14 && pcBuf[7] == 0x0C)
-		{
-			//strCount.Format(_T("receive count is %x,%x"), pcBuf[0], pcBuf[1]);
-			//AfxMessageBox(strCount);
-			memcpy(pcNCOMbuf, &pcBuf[9], 72);
-			for (i = 0; i < 72; i++)
-			{
-				NComNewChar(strut_com, pcNCOMbuf[i]);
-			}
-			Tmp_Latitude = strut_com->mLat;
-			Tmp_Longitude = strut_com->mLon;
-			latitude_v = (int32_t)(Tmp_Latitude * 10000000);
-			longitude_v = (int32_t)(Tmp_Longitude * 10000000);
-			Tmp_Altitude = (int16_t)((strut_com->mAlt)*100);
-			Tmp_Vn = strut_com->mVn;
-			Tmp_Ve = strut_com->mVe;
-			Tmp_Heading = (int16_t)(strut_com->mHeading);
-			Tmp_V = sqrt((strut_com->mVn*strut_com->mVn)+(strut_com->mVe)*(strut_com->mVe));
-			Tmp_V = (int16_t)(Tmp_V * 100);
-		}
-	}
-	free(pcNCOMbuf);
-	//NComDestroyNComRxC(strut_com);
 
-	return 0;
 }
+*/
 
 // The system calls this function to obtain the cursor to display while the user drags
 //  the minimized window.
@@ -520,16 +457,60 @@ void CMFCtestDlg::OnBnClickedCancel()
 {
 	//退出函数
 	Rsu_socket.Close();
-	Rt_socket.Close();
 	CDialogEx::OnCancel();
 }
 
 
 void CMFCtestDlg::OnBnClickedOk()
 {
+	int nPort;
+	int nBaud;
+	CString strTmp;
+	SerPortPar serPortPar;
 	// TODO: Add your control notification handler code here
 	//CDialogEx::OnOK();
 	CWinThread *pthread_Senddata1 = AfxBeginThread(SendDataThread, this);
-	//CWinThread *pthread_Senddata2 = AfxBeginThread(ReceiveDataThread, this);
+	
+	serPortPar.nPort = 2;
+	serPortPar.nBaud = 115200;
+	serPortPar.lpRecvFun = (LPVOID)OnRecvCommSend;
+	serPortPar.lpParam1 = (LPVOID)this;
+	if (OpenComm(&serPortPar))
+	{
 
+	}
+	else
+	{
+		AfxMessageBox(_T("串口打开失败!"));
+	}
+
+}
+
+void OnRecvCommSend(LPVOID lpParam, BYTE *pDataBuf, int nDataBufSize)
+{
+	unsigned int l_u32j = 0;
+	int l_n32Ret = 0;
+	unsigned int l_u32Index = 0;
+	if ((pDataBuf[0] == 0xAA) && ((pDataBuf[1] == 0x55)))
+	{
+		l_u32Index = l_u32Index + 2;
+		longitude_v = ((pDataBuf[l_u32Index] & 0xFF) << 24)
+							+ ((pDataBuf[l_u32Index + 1] & 0xFF) << 16)
+								+ ((pDataBuf[l_u32Index + 2] & 0xFF) << 8)
+									+ ((pDataBuf[l_u32Index + 3] & 0xFF));
+		l_u32Index = l_u32Index + 4;
+		latitude_v = ((pDataBuf[l_u32Index] & 0xFF) << 24)
+							+ ((pDataBuf[l_u32Index + 1] & 0xFF) << 16)
+								+ ((pDataBuf[l_u32Index + 2] & 0xFF) << 8)
+									+ ((pDataBuf[l_u32Index + 3] & 0xFF));
+		l_u32Index = l_u32Index + 4;
+		Tmp_V = ((pDataBuf[l_u32Index] & 0xFF) << 8)
+					+ ((pDataBuf[l_u32Index + 1] & 0xFF));
+		l_u32Index = l_u32Index + 2;
+		Tmp_Heading = ((pDataBuf[l_u32Index] & 0xFF) << 8)
+			+ ((pDataBuf[l_u32Index + 1] & 0xFF));
+		l_u32Index = l_u32Index + 2;
+		Tmp_Altitude = ((pDataBuf[l_u32Index] & 0xFF) << 8)
+			+ ((pDataBuf[l_u32Index + 1] & 0xFF));
+	}
 }

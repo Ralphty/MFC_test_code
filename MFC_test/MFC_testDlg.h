@@ -20,13 +20,12 @@
 //定义用户使用ID
 #define  WM_NET_SENDSignalINFO (WM_USER + 101)
 
-
 //高八位和低八位互换宏定义
 #define SW_16(x) ((short)((((short)(x)&(short)0x00ffU)<<8)|(((short)(x)&(short)0xff00U)>>8)))
 #define SW_32(x)  ((((x)&(0x00ffU))<<24)|(((x)&(0xff00U))<<8)|(((x>>16)&(0x00ffU))<<8)|(((x>>16)&(0xff00U))>>8))
 
 
-UINT ReceiveDataThread(LPVOID pParam);
+//UINT ReceiveDataThread(LPVOID pParam);
 
 class CMFCtestDlg : public CDialogEx
 {
